@@ -2,12 +2,10 @@ package main
 
 import (
 	"bufio"
-	_ "embed"
 	"encoding/json"
 	"fmt"
 	"io"
 	"os"
-
 	"time"
 
 	"github.com/ai-knowledge-lab/utils"
