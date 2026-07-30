@@ -196,7 +196,6 @@
         }
 
         .think-body {
-            white-space: pre-wrap;
             word-break: break-word;
             font-style: italic;
             color: #fcd34d;
@@ -207,8 +206,11 @@
             font-size: 16px;
             line-height: 1.75;
             color: #f8fafc;
-            white-space: pre-wrap;
             word-break: break-word;
+        }
+
+        #thinkOutput, #answerOutput {
+            white-space: pre-wrap;
         }
 
         .answer-header {
@@ -328,17 +330,14 @@
                 <div class="think-header">
                     <span>🧠 深度思考中...</span>
                 </div>
-                <div class="think-body">
-                    <span id="thinkOutput"></span><span id="thinkCursor" class="cursor think-cursor"></span>
-                </div>
+                <div class="think-body"><span id="thinkOutput"></span><span id="thinkCursor" class="cursor think-cursor"></span></div>
             </div>
 
             <!-- 2. 最终翻译 / 回答卡片 -->
             <div id="answerContainer" class="answer-card">
                 <div id="answerHeader" class="answer-header" style="display: none;">
                     <span>💡 翻译结果：</span>
-                </div>
-                <span id="answerOutput"></span><span id="answerCursor" class="cursor" style="display: none;"></span>
+                </div><span id="answerOutput"></span><span id="answerCursor" class="cursor" style="display: none;"></span>
             </div>
         </div>
 
@@ -454,14 +453,22 @@
                 if (payload.think) {
                     thinkContainer.style.display = "block";
                     thinkCursor.style.display = "inline-block";
-                    thinkOutput.textContent += payload.think;
+                    let thinkText = payload.think;
+                    if (!thinkOutput.textContent.trim()) {
+                        thinkText = thinkText.trimStart();
+                    }
+                    thinkOutput.textContent += thinkText;
                 }
                 // 2. 其次渲染 answer 回答内容
                 if (payload.answer) {
                     thinkCursor.style.display = "none";
                     answerHeader.style.display = "flex";
                     answerCursor.style.display = "inline-block";
-                    answerOutput.textContent += payload.answer;
+                    let answerText = payload.answer;
+                    if (!answerOutput.textContent.trim()) {
+                        answerText = answerText.trimStart();
+                    }
+                    answerOutput.textContent += answerText;
                 }
             } else {
                 log(`状态码异常: ${payload.status}`);
