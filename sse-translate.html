@@ -1,0 +1,607 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>SSE AI翻译双通道流式响应终端 (Think & Answer)</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #0f172a;
+            color: #f8fafc;
+            display: flex;
+            justify-content: center;
+            padding: 32px 16px;
+        }
+
+        main {
+            width: min(920px, 100%);
+        }
+
+        .card {
+            background: #1e293b;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            margin: 0 0 8px;
+            font-size: 22px;
+            font-weight: 700;
+            color: #60a5fa;
+        }
+
+        p.description {
+            margin: 0 0 20px;
+            font-size: 14px;
+            color: #94a3b8;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #cbd5e1;
+            margin-bottom: 6px;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            font-size: 14px;
+            background: #0f172a;
+            color: #f8fafc;
+            font-family: inherit;
+        }
+
+        select {
+            cursor: pointer;
+        }
+
+        .lang-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+            font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, Monaco, "Segoe UI Mono", "Courier New", monospace;
+        }
+
+        #transText {
+            min-height: 140px;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        button {
+            height: 38px;
+            padding: 0 16px;
+            border: 0;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            color: #fff;
+            background: #2563eb;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        button.danger {
+            background: #ef4444;
+        }
+
+        button.danger:hover {
+            background: #dc2626;
+        }
+
+        button.secondary {
+            background: #475569;
+        }
+
+        button.secondary:hover {
+            background: #334155;
+        }
+
+        button:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 16px 0 8px;
+            font-size: 13px;
+            color: #94a3b8;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background: #334155;
+            color: #cbd5e1;
+            font-size: 12px;
+        }
+
+        .badge.active {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+        }
+
+        /* 主输出面板 */
+        .output-container {
+            min-height: 220px;
+            padding: 16px;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            background: #0f172a;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        /* 🧠 深度思考框样式 */
+        .think-card {
+            background: rgba(245, 158, 11, 0.08);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-left: 4px solid #f59e0b;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 14px;
+            color: #fbbf24;
+            line-height: 1.6;
+        }
+
+        .think-header {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 700;
+            font-size: 13px;
+            color: #f59e0b;
+            margin-bottom: 6px;
+        }
+
+        .think-body {
+            white-space: pre-wrap;
+            word-break: break-word;
+            font-style: italic;
+            color: #fcd34d;
+        }
+
+        /* 💬 最终回答框样式 */
+        .answer-card {
+            font-size: 16px;
+            line-height: 1.75;
+            color: #f8fafc;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .answer-header {
+            font-size: 13px;
+            font-weight: 700;
+            color: #38bdf8;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 1.1em;
+            margin-left: 2px;
+            vertical-align: -2px;
+            background: #3b82f6;
+            animation: blink 1s steps(2, start) infinite;
+        }
+
+        .think-cursor {
+            background: #f59e0b;
+        }
+
+        @keyframes blink {
+            50% {
+                opacity: 0;
+            }
+        }
+
+        .logs-title {
+            margin-top: 20px;
+            font-size: 13px;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        .logs {
+            margin-top: 6px;
+            padding: 12px;
+            border-radius: 8px;
+            background: #090d16;
+            color: #34d399;
+            font-family: Consolas, Monaco, monospace;
+            font-size: 12px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            max-height: 160px;
+            overflow-y: auto;
+            border: 1px solid #1e293b;
+        }
+    </style>
+</head>
+<body>
+<main>
+    <div class="card">
+        <h1>SSE AI翻译双通道流式响应终端 (Think & Answer)</h1>
+        <p class="description">解析后端返回的 <code>think</code> (思维链) 与 <code>answer</code> (回复内容)，优先在最上方展示思考过程。
+        </p>
+
+        <div class="form-group">
+            <label for="sseUrl">接口地址 (POST)</label>
+            <input id="sseUrl" value="http://127.0.0.1:8080/translate" placeholder="http://127.0.0.1:8080/translate"/>
+        </div>
+
+        <div class="lang-grid">
+            <div class="form-group">
+                <label for="fromLang">源语言 (from)</label>
+                <select id="fromLang">
+                    <option value="英文" selected>英文</option>
+                    <option value="中文">中文</option>
+                    <option value="日文">日文</option>
+                    <option value="韩文">韩文</option>
+                    <option value="法文">法文</option>
+                    <option value="德文">德文</option>
+                    <option value="西班牙文">西班牙文</option>
+                    <option value="俄文">俄文</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="toLang">目标语言 (to)</label>
+                <select id="toLang">
+                    <option value="中文" selected>中文</option>
+                    <option value="英文">英文</option>
+                    <option value="日文">日文</option>
+                    <option value="韩文">韩文</option>
+                    <option value="法文">法文</option>
+                    <option value="德文">德文</option>
+                    <option value="西班牙文">西班牙文</option>
+                    <option value="俄文">俄文</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="transText">待翻译文本 (text)</label>
+            <textarea id="transText" placeholder="请输入需要翻译的文本内容...">Hello world</textarea>
+        </div>
+
+        <div class="btn-group">
+            <button id="sendBtn">发送 POST 请求</button>
+            <button id="mockBtn" class="secondary">测试 Think/Answer 模拟流</button>
+            <button id="clearBtn" class="secondary">清空内容</button>
+        </div>
+
+        <div class="status-bar">
+            <span>接收状态: <span id="statusBadge" class="badge">未连接</span></span>
+            <span id="speedInfo">响应模式: 即时流式输出 (无延迟)</span>
+        </div>
+
+        <!-- 输出主区域 -->
+        <div class="output-container">
+            <!-- 1. 深度思考卡片 (默认隐藏，收到 think 数据时动态展示在最上方) -->
+            <div id="thinkContainer" class="think-card" style="display: none;">
+                <div class="think-header">
+                    <span>🧠 深度思考中...</span>
+                </div>
+                <div class="think-body">
+                    <span id="thinkOutput"></span><span id="thinkCursor" class="cursor think-cursor"></span>
+                </div>
+            </div>
+
+            <!-- 2. 最终翻译 / 回答卡片 -->
+            <div id="answerContainer" class="answer-card">
+                <div id="answerHeader" class="answer-header" style="display: none;">
+                    <span>💡 翻译结果：</span>
+                </div>
+                <span id="answerOutput"></span><span id="answerCursor" class="cursor" style="display: none;"></span>
+            </div>
+        </div>
+
+        <div class="logs-title">SSE 接收原始日志 (Event Log):</div>
+        <div id="logs" class="logs"></div>
+    </div>
+</main>
+
+<script>
+    const sseUrlInput = document.querySelector("#sseUrl");
+    const fromLangSelect = document.querySelector("#fromLang");
+    const toLangSelect = document.querySelector("#toLang");
+    const transTextInput = document.querySelector("#transText");
+    const sendBtn = document.querySelector("#sendBtn");
+    const mockBtn = document.querySelector("#mockBtn");
+    const clearBtn = document.querySelector("#clearBtn");
+    const statusBadge = document.querySelector("#statusBadge");
+
+    // 渲染容器 DOM
+    const thinkContainer = document.querySelector("#thinkContainer");
+    const thinkOutput = document.querySelector("#thinkOutput");
+    const thinkCursor = document.querySelector("#thinkCursor");
+
+    const answerHeader = document.querySelector("#answerHeader");
+    const answerOutput = document.querySelector("#answerOutput");
+    const answerCursor = document.querySelector("#answerCursor");
+
+    const logsEl = document.querySelector("#logs");
+
+    let abortController = null;
+
+    // 打字机队列对象：[{ type: 'think' | 'answer', char: '字' }]
+    const charQueue = [];
+    let isTyping = false;
+    const typingIntervalMs = 30; // 打字间隔 30ms
+
+    function log(message) {
+        const time = new Date().toLocaleTimeString();
+        logsEl.textContent += `[${time}] ${message}\n`;
+        logsEl.scrollTop = logsEl.scrollHeight;
+    }
+
+    function setStatus(text, isActive = false) {
+        statusBadge.textContent = text;
+        if (isActive) {
+            statusBadge.classList.add("active");
+        } else {
+            statusBadge.classList.remove("active");
+        }
+    }
+
+    // 将内容装入打字队列 (区分 think / answer)
+    function enqueueChars(type, text) {
+        if (!text) return;
+        const chars = Array.from(String(text));
+        for (const char of chars) {
+            charQueue.push({type, char});
+        }
+        runTypewriter();
+    }
+
+    // 运行通用打字机队列
+    function runTypewriter() {
+        if (isTyping) return;
+        isTyping = true;
+
+        const timer = setInterval(() => {
+            if (charQueue.length === 0) {
+                clearInterval(timer);
+                isTyping = false;
+                // 隐藏 think 光标
+                thinkCursor.style.display = "none";
+                return;
+            }
+
+            const item = charQueue.shift();
+
+            if (item.type === "think") {
+                // 确保 think 框可见，展示 think 光标
+                thinkContainer.style.display = "block";
+                thinkCursor.style.display = "inline-block";
+                thinkOutput.textContent += item.char;
+            } else if (item.type === "answer") {
+                // 思考结束，think 光标隐去，呈现回答区域
+                thinkCursor.style.display = "none";
+                answerHeader.style.display = "flex";
+                answerCursor.style.display = "inline-block";
+                answerOutput.textContent += item.char;
+            }
+        }, typingIntervalMs);
+    }
+
+    // 处理单个 SSE 报文
+    function handleSseChunk(chunk) {
+        const lines = chunk.split("\n");
+        let dataStr = "";
+
+        for (const line of lines) {
+            if (line.startsWith("data:")) {
+                dataStr = line.replace("data:", "").trim();
+            }
+        }
+
+        if (!dataStr) return;
+
+        log(`收到包: ${dataStr}`);
+
+        try {
+            const payload = JSON.parse(dataStr);
+
+            if (payload.status === 0) {
+                // 1. 优先渲染 think 思考内容
+                if (payload.think) {
+                    thinkContainer.style.display = "block";
+                    thinkCursor.style.display = "inline-block";
+                    thinkOutput.textContent += payload.think;
+                }
+                // 2. 其次渲染 answer 回答内容
+                if (payload.answer) {
+                    thinkCursor.style.display = "none";
+                    answerHeader.style.display = "flex";
+                    answerCursor.style.display = "inline-block";
+                    answerOutput.textContent += payload.answer;
+                }
+            } else {
+                log(`状态码异常: ${payload.status}`);
+            }
+        } catch (err) {
+            log(`JSON 解析失败: ${dataStr}`);
+        }
+    }
+
+    // 发起 POST 流请求
+    async function startPostStream() {
+        if (abortController) {
+            abortController.abort();
+            abortController = null;
+            setStatus("已手动终止");
+            sendBtn.textContent = "发送 POST 请求";
+            sendBtn.classList.remove("danger");
+            return;
+        }
+
+        const url = sseUrlInput.value.trim();
+        if (!url) {
+            alert("请输入接口地址！");
+            return;
+        }
+
+        const text = transTextInput.value.trim();
+        if (!text) {
+            alert("请输入要翻译的文本内容！");
+            return;
+        }
+
+        const bodyData = {
+            text: text,
+            from: fromLangSelect.value,
+            to: toLangSelect.value
+        };
+
+        // 重置界面与队列
+        clearContent();
+
+        abortController = new AbortController();
+        sendBtn.textContent = "停止接收";
+        sendBtn.classList.add("danger");
+        setStatus("正在连接与接收...", true);
+        log(`发送 POST 请求至: ${url}`);
+
+        try {
+            const response = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "text/event-stream"
+                },
+                body: JSON.stringify(bodyData),
+                signal: abortController.signal
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP 状态码: ${response.status}`);
+            }
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder("utf-8");
+            let buffer = "";
+
+            while (true) {
+                const {done, value} = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, {stream: true});
+                const chunks = buffer.split("\n\n");
+                buffer = chunks.pop() || "";
+
+                for (const chunk of chunks) {
+                    if (chunk.trim()) {
+                        handleSseChunk(chunk);
+                    }
+                }
+            }
+
+            if (buffer.trim()) {
+                handleSseChunk(buffer);
+            }
+
+            setStatus("接收完成");
+            log("流式响应结束");
+        } catch (error) {
+            if (error.name === "AbortError") {
+                log("用户终止了请求");
+            } else {
+                log(`请求失败: ${error.message}`);
+                setStatus(`错误: ${error.message}`);
+            }
+        } finally {
+            abortController = null;
+            sendBtn.textContent = "发送 POST 请求";
+            sendBtn.classList.remove("danger");
+            thinkCursor.style.display = "none";
+            answerCursor.style.display = "none";
+        }
+    }
+
+    function clearContent() {
+        thinkContainer.style.display = "none";
+        thinkOutput.textContent = "";
+        thinkCursor.style.display = "none";
+
+        answerHeader.style.display = "none";
+        answerOutput.textContent = "";
+        answerCursor.style.display = "none";
+
+        charQueue.length = 0;
+        logsEl.textContent = "";
+    }
+
+    sendBtn.addEventListener("click", startPostStream);
+    clearBtn.addEventListener("click", clearContent);
+
+    // 模拟演示 think 思考先出 + answer 回答后出的流程
+    mockBtn.addEventListener("click", () => {
+        clearContent();
+        setStatus("测试模拟数据...", true);
+
+        const mockPackets = [
+            'event:message\ndata:{"translate_id":"6dbf9d97-27bb-4f3d-a140-3c1e915af48f","answer":"","think":"好的，正在分析用户发来的英文句子结构...","status":0,"data":{}}\n\n',
+            'event:message\ndata:{"translate_id":"6dbf9d97-27bb-4f3d-a140-3c1e915af48f","answer":"","think":"识别到关键词技术与自然翻译，即将输出中文结果。","status":0,"data":{}}\n\n',
+            'event:message\ndata:{"translate_id":"6dbf9d97-27bb-4f3d-a140-3c1e915af48f","answer":"前沿","think":"","status":0,"data":{}}\n\n',
+            'event:message\ndata:{"translate_id":"6dbf9d97-27bb-4f3d-a140-3c1e915af48f","answer":"人工智能解决方案。","think":"","status":0,"data":{}}\n\n'
+        ];
+
+        mockPackets.forEach((packet, index) => {
+            setTimeout(() => {
+                handleSseChunk(packet);
+                if (index === mockPackets.length - 1) {
+                    setStatus("模拟数据接收完毕");
+                }
+            }, index * 600);
+        });
+    });
+</script>
+</body>
+</html>
