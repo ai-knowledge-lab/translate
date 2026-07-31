@@ -691,6 +691,7 @@
         const [theme, setTheme] = useState('dark');
         const [sourceLang, setSourceLang] = useState('en');
         const [targetLang, setTargetLang] = useState('zh');
+        const [model, setModel] = useState('deepseek-r1:8b');
         const [inputText, setInputText] = useState('');
         const [outputText, setOutputText] = useState('');
         const [thinkText, setThinkText] = useState('');
@@ -788,7 +789,8 @@
                     body: JSON.stringify({
                         text: inputText,
                         from: getApiLang(sourceLang),
-                        to: getApiLang(targetLang)
+                        to: getApiLang(targetLang),
+                        model: model
                     }),
                     signal: controller.signal
                 });
@@ -887,7 +889,7 @@
                     setIsLoading(false);
                 }
             }
-        }, [inputText, sourceLang, targetLang]);
+        }, [inputText, sourceLang, targetLang, model]);
 
         useEffect(() => {
             if (!autoTranslate || !inputText.trim()) return;
@@ -991,6 +993,19 @@
                                 {TARGET_LANGUAGES.map(lang => (
                                     <option key={lang.code} value={lang.code}>{lang.name}</option>
                                 ))}
+                            </select>
+                        </div>
+
+                        <div className='lang-select-group'>
+                            <span className='select-label'>模型:</span>
+                            <select
+                                className='lang-select'
+                                value={model}
+                                onChange={(e) => setModel(e.target.value)}
+                            >
+                                <option value='deepseek-r1:8b'>deepseek-r1:8b</option>
+                                <option value='qwen3.5:9b'>qwen3.5:9b</option>
+                                <option value='qwen3:8b'>qwen3:8b</option>
                             </select>
                         </div>
                     </div>
