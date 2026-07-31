@@ -31,8 +31,8 @@ func main() {
 	router := gin.Default()
 	router.Use(cors.Default())
 
-	router.StaticFile("/", "./sse-translate.html")
-	router.StaticFile("/index", "./index.html")
+	router.StaticFile("/", "./index.html")
+	router.StaticFile("/sse", "./sse-translate.html")
 	router.GET("/ping", func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, gin.H{
 			"code":    0,
