@@ -2,6 +2,8 @@ github.com/ai-knowledge-lab/utils v0.0.0-20260730042324-31d367dda2b9 h1:LneTL27Y
 github.com/ai-knowledge-lab/utils v0.0.0-20260730042324-31d367dda2b9/go.mod h1:UztdLzcLnWIbrctxUACZOOQqNGkL4GLGaLLsIWn3Jvg=
 github.com/ai-knowledge-lab/utils v0.0.0-20260730074747-80a7df2f495b h1:tD8UqS2Lg/db1UJv5Ai2rV0j4+I95koDEjP5AJ0utEI=
 github.com/ai-knowledge-lab/utils v0.0.0-20260730074747-80a7df2f495b/go.mod h1:UztdLzcLnWIbrctxUACZOOQqNGkL4GLGaLLsIWn3Jvg=
+github.com/ai-knowledge-lab/utils v0.0.0-20260731051613-82305fd755bf h1:vPOF1wUIGA01tlES7BcxHs1vemNhsq0FzvcmJWo7iCs=
+github.com/ai-knowledge-lab/utils v0.0.0-20260731051613-82305fd755bf/go.mod h1:UztdLzcLnWIbrctxUACZOOQqNGkL4GLGaLLsIWn3Jvg=
 github.com/bytedance/gopkg v0.1.4 h1:oZnQwnX82KAIWb7033bEwtxvTqXcYMxDBaQxo5JJHWM=
 github.com/bytedance/gopkg v0.1.4/go.mod h1:v1zWfPm21Fb+OsyXN2VAHdL6TBb2L88anLQgdyje6R4=
 github.com/bytedance/sonic v1.15.2 h1:90H+rcF/FwLXwfB1cudOLq/je83n683Utf4Cbp0xHCo=

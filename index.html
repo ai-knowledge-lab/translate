@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能翻译中心 - OmniTranslate</title>
+
+    <!-- 在线版 React & ReactDOM & Babel (保持当前引入) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.min.js"></script>
+
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+            --panel-bg: rgba(30, 41, 59, 0.75);
+            --panel-border: rgba(255, 255, 255, 0.12);
+            --card-bg: rgba(15, 23, 42, 0.65);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-primary: #6366f1;
+            --accent-hover: #4f46e5;
+            --accent-glow: rgba(99, 102, 241, 0.35);
+            --accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            --input-bg: rgba(15, 23, 42, 0.85);
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+            --shadow-glow: 0 10px 30px -10px rgba(99, 102, 241, 0.3);
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        [data-theme="light"] {
+            --bg-gradient: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 50%, #f8fafc 100%);
+            --panel-bg: rgba(255, 255, 255, 0.88);
+            --panel-border: rgba(0, 0, 0, 0.08);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --accent-primary: #4f46e5;
+            --accent-hover: #4338ca;
+            --accent-glow: rgba(79, 70, 229, 0.2);
+            --accent-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            --input-bg: #ffffff;
+            --shadow-glow: 0 10px 25px -5px rgba(79, 70, 229, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Microsoft YaHei", "PingFang SC", sans-serif;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 24px 16px;
+            transition: var(--transition);
+        }
+
+        #root {
+            width: 100%;
+            max-width: 1050px;
+        }
+
+        .glass-panel {
+            background: var(--panel-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--panel-border);
+            border-radius: var(--radius-lg);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Header */
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            margin-bottom: 24px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--accent-gradient);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            box-shadow: var(--shadow-glow);
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .brand-title {
+            font-size: 1.35rem;
+            font-weight: 700;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.02em;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .icon-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--panel-border);
+            color: var(--text-secondary);
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 1.1rem;
+        }
+
+        .icon-btn:hover {
+            color: var(--text-primary);
+            border-color: var(--accent-primary);
+            transform: translateY(-1px);
+        }
+
+        /* Translation Main Card */
+        .translate-card {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Language Switcher Bar */
+        .lang-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--input-bg);
+            border: 1px solid var(--panel-border);
+            padding: 8px 16px;
+            border-radius: var(--radius-md);
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .lang-select-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+            min-width: 180px;
+        }
+
+        .select-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .lang-select {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            font-weight: 600;
+            padding: 8px 4px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .lang-select option {
+            background: #1e293b;
+            color: #f8fafc;
+        }
+
+        [data-theme="light"] .lang-select option {
+            background: #ffffff;
+            color: #0f172a;
+        }
+
+        .swap-btn {
+            background: var(--accent-gradient);
+            border: none;
+            color: white;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: var(--shadow-glow);
+            flex-shrink: 0;
+            font-size: 1.1rem;
+        }
+
+        .swap-btn:hover {
+            transform: rotate(180deg) scale(1.05);
+        }
+
+        /* Editors Grid */
+        .translation-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .translation-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .editor-box {
+            background: var(--card-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: var(--radius-md);
+            display: flex;
+            flex-direction: column;
+            height: 380px;
+            position: relative;
+            transition: var(--transition);
+        }
+
+        .editor-box:focus-within {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .textarea {
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            border: none;
+            outline: none;
+            padding: 16px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            line-height: 1.6;
+            resize: none;
+        }
+
+        .output-text {
+            width: 100%;
+            height: 100%;
+            padding: 16px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            line-height: 1.6;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .placeholder-text {
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* Editor Footer */
+        .editor-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 16px;
+            border-top: 1px solid var(--panel-border);
+            background: rgba(0, 0, 0, 0.05);
+            border-bottom-left-radius: var(--radius-md);
+            border-bottom-right-radius: var(--radius-md);
+        }
+
+        .tool-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tool-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .tool-btn:hover:not(:disabled) {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .tool-btn:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+
+        .char-counter {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* Action Bar */
+        .action-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .auto-translate-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            user-select: none;
+        }
+
+        .translate-main-btn {
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: var(--shadow-glow);
+            transition: var(--transition);
+        }
+
+        .translate-main-btn:hover {
+            transform: translateY(-2px);
+            opacity: 0.95;
+        }
+
+        .translate-main-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Loading Shimmer */
+        .loading-shimmer {
+            animation: pulse 1.5s infinite ease-in-out;
+            color: var(--accent-primary);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Think Card Styles (from sse-translate) */
+        .think-card {
+            background: rgba(245, 158, 11, 0.08);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-left: 4px solid #f59e0b;
+            border-radius: var(--radius-sm);
+            padding: 12px 14px;
+            font-size: 0.88rem;
+            color: #fbbf24;
+            line-height: 1.6;
+            margin-bottom: 14px;
+        }
+
+        .think-header {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 700;
+            font-size: 0.82rem;
+            color: #f59e0b;
+            margin-bottom: 6px;
+        }
+
+        .think-body {
+            word-break: break-word;
+            font-style: italic;
+            color: #fcd34d;
+            white-space: pre-wrap;
+        }
+
+        /* Answer Card & Cursor Styles (matching sse-translate with colored card frame & themed text color) */
+        .answer-card {
+            background: rgba(56, 189, 248, 0.08);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            border-left: 4px solid #38bdf8;
+            border-radius: var(--radius-sm);
+            padding: 12px 14px;
+            font-size: 0.88rem;
+            line-height: 1.6;
+            margin-bottom: 14px;
+        }
+
+        .answer-header {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #38bdf8;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        [data-theme="light"] .answer-card {
+            background: rgba(79, 70, 229, 0.07);
+            border: 1px solid rgba(79, 70, 229, 0.2);
+            border-left: 4px solid #4f46e5;
+        }
+
+        [data-theme="light"] .answer-header {
+            color: #4338ca;
+        }
+
+        .answer-body {
+            font-size: 0.88rem;
+            line-height: 1.6;
+            color: #7dd3fc;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        [data-theme="light"] .answer-body {
+            color: #3730a3;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 1.1em;
+            margin-left: 3px;
+            vertical-align: -2px;
+            background: #3b82f6;
+            border-radius: 1px;
+            animation: cursorBlink 1s steps(2, start) infinite;
+        }
+
+        .think-cursor {
+            background: #f59e0b;
+        }
+
+        @keyframes cursorBlink {
+            50% {
+                opacity: 0;
+            }
+        }
+
+        .translate-main-btn.danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            box-shadow: 0 10px 30px -10px rgba(239, 68, 68, 0.4);
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 0.4;
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+
+        /* Presets */
+        .quick-presets {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .preset-chip {
+            background: var(--card-bg);
+            border: 1px solid var(--panel-border);
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .preset-chip:hover {
+            border-color: var(--accent-primary);
+            color: var(--text-primary);
+        }
+
+        /* History Section */
+        .history-section {
+            margin-top: 24px;
+            padding: 20px 24px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 240px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            background: var(--card-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            transition: var(--transition);
+        }
+
+        .history-item:hover {
+            border-color: var(--accent-primary);
+        }
+
+        .history-texts {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .history-source {
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .history-target {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .history-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--accent-gradient);
+            color: white;
+            padding: 10px 20px;
+            border-radius: var(--radius-md);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            font-size: 0.9rem;
+            font-weight: 500;
+            z-index: 1000;
+            animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="root"></div>
+
+<!-- React JSX Application -->
+<script type="text/babel">
+    const {useState, useEffect, useCallback} = React;
+
+    // Supported languages list
+    const LANGUAGES = [
+        {code: 'en', name: '英语 (English) 🇺🇸'},
+        {code: 'zh', name: '中文 (Chinese) 🇨🇳'},
+        {code: 'ja', name: '日语 (Japanese) 🇯🇵'},
+        {code: 'ko', name: '韩语 (Korean) 🇰🇷'},
+        {code: 'fr', name: '法语 (French) 🇫🇷'},
+        {code: 'de', name: '德语 (German) 🇩🇪'},
+        {code: 'es', name: '西班牙语 (Spanish) 🇪🇸'},
+        {code: 'ru', name: '俄语 (Russian) 🇷🇺'},
+        {code: 'it', name: '意大利语 (Italian) 🇮🇹'}
+    ];
+
+    const TARGET_LANGUAGES = LANGUAGES;
+
+    const LANG_MAP = {
+        'zh': '中文',
+        'en': '英文',
+        'ja': '日文',
+        'ko': '韩文',
+        'fr': '法文',
+        'de': '德文',
+        'es': '西班牙文',
+        'ru': '俄文',
+        'it': '意大利文'
+    };
+
+    const getApiLang = (code) => LANG_MAP[code] || code;
+
+    const SAMPLES = [
+        {label: '🌍 你好世界', text: 'Hello World'},
+        {label: '👋 问候短语', text: 'Hello, welcome to OmniTranslate! How can I assist you today?'},
+        {
+            label: '💼 商务邮件',
+            text: 'Dear Team, I am writing to confirm our project sync call scheduled for tomorrow morning.'
+        },
+        {
+            label: '💻 编程技术',
+            text: 'React makes it painless to create interactive UIs by designing simple views for each state in your application.'
+        },
+        {label: '✈️ 旅游出行', text: 'Excuse me, could you please tell me how to get to the nearest metro station?'}
+    ];
+
+    // Speech Synthesis
+    const speakText = (text, lang) => {
+        if (!('speechSynthesis' in window)) {
+            alert('您的浏览器不支持语音播放功能');
+            return;
+        }
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = lang === 'zh' ? 'zh-CN' : lang === 'en' ? 'en-US' : lang;
+        window.speechSynthesis.speak(utterance);
+    };
+
+    function App() {
+        const [theme, setTheme] = useState('dark');
+        const [sourceLang, setSourceLang] = useState('en');
+        const [targetLang, setTargetLang] = useState('zh');
+        const [inputText, setInputText] = useState('');
+        const [outputText, setOutputText] = useState('');
+        const [thinkText, setThinkText] = useState('');
+        const [isLoading, setIsLoading] = useState(false);
+
+        const savedAutoTranslate = sessionStorage.getItem('omni_auto_translate');
+        const [autoTranslate, setAutoTranslate] = useState(
+            savedAutoTranslate !== null ? JSON.parse(savedAutoTranslate) : true
+        );
+
+        const [history, setHistory] = useState([]);
+        const [toastMessage, setToastMessage] = useState('');
+
+        const handleAutoTranslateToggle = (e) => {
+            const checked = e.target.checked;
+            setAutoTranslate(checked);
+            sessionStorage.setItem('omni_auto_translate', JSON.stringify(checked));
+        };
+
+        const abortControllerRef = React.useRef(null);
+        const outputRef = React.useRef(null);
+
+        useEffect(() => {
+            if (outputRef.current) {
+                outputRef.current.scrollTop = outputRef.current.scrollHeight;
+            }
+        }, [thinkText, outputText]);
+
+        useEffect(() => {
+            const savedTheme = localStorage.getItem('omni_theme') || 'dark';
+            setTheme(savedTheme);
+            document.body.setAttribute('data-theme', savedTheme);
+
+            const savedHistory = localStorage.getItem('omni_history');
+            if (savedHistory) {
+                try {
+                    setHistory(JSON.parse(savedHistory));
+                } catch (e) {
+                    console.error(e);
+                }
+            }
+        }, []);
+
+        const showToast = (msg) => {
+            setToastMessage(msg);
+            setTimeout(() => setToastMessage(''), 2500);
+        };
+
+        const toggleTheme = () => {
+            const newTheme = theme === 'dark' ? 'light' : 'dark';
+            setTheme(newTheme);
+            document.body.setAttribute('data-theme', newTheme);
+            localStorage.setItem('omni_theme', newTheme);
+        };
+
+        const handleStop = () => {
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
+                abortControllerRef.current = null;
+                setIsLoading(false);
+            }
+        };
+
+        const handleTranslate = useCallback(async () => {
+            if (!inputText.trim()) {
+                setOutputText('');
+                setThinkText('');
+                return;
+            }
+
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
+            }
+
+            const controller = new AbortController();
+            abortControllerRef.current = controller;
+
+            setIsLoading(true);
+            setThinkText('');
+            setOutputText('');
+            let accumulatedThink = "";
+            let accumulatedAnswer = "";
+
+            const targetUrl = window.location.origin.includes('8080') || (window.location.protocol === 'http:' && window.location.hostname === '127.0.0.1')
+                ? '/translate'
+                : 'http://127.0.0.1:8080/translate';
+
+            try {
+                const response = await fetch(targetUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'text/event-stream'
+                    },
+                    body: JSON.stringify({
+                        text: inputText,
+                        from: getApiLang(sourceLang),
+                        to: getApiLang(targetLang)
+                    }),
+                    signal: controller.signal
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP 状态码: ${response.status}`);
+                }
+
+                if (!response.body) {
+                    throw new Error("ReadableStream not supported");
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder('utf-8');
+                let buffer = "";
+
+                const handleSseChunk = (chunk) => {
+                    const lines = chunk.split("\n");
+                    let dataStr = "";
+
+                    for (const line of lines) {
+                        if (line.startsWith("data:")) {
+                            dataStr = line.replace("data:", "").trim();
+                        }
+                    }
+
+                    if (!dataStr) return;
+
+                    try {
+                        const payload = JSON.parse(dataStr);
+
+                        if (payload.status === 0) {
+                            if (payload.think) {
+                                accumulatedThink += payload.think;
+                                setThinkText(accumulatedThink);
+                            }
+                            if (payload.answer) {
+                                accumulatedAnswer += payload.answer;
+                                setOutputText(accumulatedAnswer);
+                            }
+                        } else if (payload.answer) {
+                            accumulatedAnswer += payload.answer;
+                            setOutputText(accumulatedAnswer);
+                        }
+                    } catch (e) {
+                        console.error("JSON parse error:", e, dataStr);
+                    }
+                };
+
+                while (true) {
+                    const {value, done} = await reader.read();
+                    if (done) break;
+
+                    buffer += decoder.decode(value, {stream: true});
+                    const chunks = buffer.split("\n\n");
+                    buffer = chunks.pop() || "";
+
+                    for (const chunk of chunks) {
+                        if (chunk.trim()) {
+                            handleSseChunk(chunk);
+                        }
+                    }
+                }
+
+                if (buffer.trim()) {
+                    handleSseChunk(buffer);
+                }
+
+                if (accumulatedAnswer.trim()) {
+                    const newItem = {
+                        id: Date.now(),
+                        sourceText: inputText,
+                        targetText: accumulatedAnswer,
+                        from: sourceLang,
+                        to: targetLang,
+                        time: new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})
+                    };
+                    setHistory(prev => {
+                        const updated = [newItem, ...prev.filter(item => item.sourceText !== inputText)].slice(0, 10);
+                        localStorage.setItem('omni_history', JSON.stringify(updated));
+                        return updated;
+                    });
+                }
+            } catch (err) {
+                if (err.name === 'AbortError') {
+                    console.log('请求已被用户终止');
+                } else {
+                    console.error('Translation Error:', err);
+                    if (!accumulatedAnswer && !accumulatedThink) {
+                        setOutputText(`翻译失败: ${err.message}`);
+                    }
+                }
+            } finally {
+                if (abortControllerRef.current === controller) {
+                    abortControllerRef.current = null;
+                    setIsLoading(false);
+                }
+            }
+        }, [inputText, sourceLang, targetLang]);
+
+        useEffect(() => {
+            if (!autoTranslate || !inputText.trim()) return;
+            const timer = setTimeout(() => {
+                handleTranslate();
+            }, 600);
+            return () => clearTimeout(timer);
+        }, [inputText, sourceLang, targetLang, autoTranslate, handleTranslate]);
+
+        const handleSwap = () => {
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
+                abortControllerRef.current = null;
+                setIsLoading(false);
+            }
+            const temp = sourceLang;
+            setSourceLang(targetLang);
+            setTargetLang(temp);
+            setInputText(outputText);
+            setOutputText(inputText);
+            setThinkText('');
+        };
+
+        const handleCopy = (text) => {
+            if (!text) return;
+            navigator.clipboard.writeText(text);
+            showToast('已复制到剪贴板！');
+        };
+
+        const handleClear = () => {
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
+                abortControllerRef.current = null;
+                setIsLoading(false);
+            }
+            setInputText('');
+            setOutputText('');
+            setThinkText('');
+        };
+
+        const handleClearOutput = () => {
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
+                abortControllerRef.current = null;
+                setIsLoading(false);
+            }
+            setOutputText('');
+            setThinkText('');
+        };
+
+        const handleClearHistory = () => {
+            setHistory([]);
+            localStorage.removeItem('omni_history');
+            showToast('翻译历史已清空');
+        };
+
+        return (
+            <div className="container">
+                {/* Header */}
+                <header className="app-header glass-panel">
+                    <div className="brand">
+                        <div className="brand-icon">译</div>
+                        <span className="brand-title">OmniTranslate AI</span>
+                    </div>
+
+                    <div className="header-actions">
+                        <button className="icon-btn" onClick={toggleTheme} title="切换主题">
+                            {theme === 'dark' ? '☀️' : '🌙'}
+                        </button>
+                    </div>
+                </header>
+
+                {/* Main Translation Card */}
+                <main className="translate-card glass-panel">
+                    {/* Language Selector Bar */}
+                    <div className="lang-bar">
+                        <div className="lang-select-group">
+                            <span className="select-label">源语言:</span>
+                            <select
+                                className="lang-select"
+                                value={sourceLang}
+                                onChange={(e) => setSourceLang(e.target.value)}
+                            >
+                                {LANGUAGES.map(lang => (
+                                    <option key={lang.code} value={lang.code}>{lang.name}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <button className="swap-btn" onClick={handleSwap} title="互换语言">
+                            ⇄
+                        </button>
+
+                        <div className="lang-select-group">
+                            <span className="select-label">目标语言:</span>
+                            <select
+                                className="lang-select"
+                                value={targetLang}
+                                onChange={(e) => setTargetLang(e.target.value)}
+                            >
+                                {TARGET_LANGUAGES.map(lang => (
+                                    <option key={lang.code} value={lang.code}>{lang.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+
+                    {/* Translation Editors */}
+                    <div className="translation-grid">
+                        {/* Source Input Box */}
+                        <div className="editor-box">
+                                <textarea
+                                    className="textarea"
+                                    placeholder="输入要翻译的文本..."
+                                    value={inputText}
+                                    onChange={(e) => setInputText(e.target.value)}
+                                    maxLength={5000}
+                                />
+                            <div className="editor-footer">
+                                <div className="tool-group">
+                                    <button className="tool-btn" onClick={handleClear} disabled={!inputText}
+                                            title="清空文本">
+                                        ✕ 清空
+                                    </button>
+                                    <button className="tool-btn" onClick={() => speakText(inputText, sourceLang)}
+                                            disabled={!inputText} title="朗读源文本">
+                                        🔊 朗读
+                                    </button>
+                                    <button className="tool-btn" onClick={() => handleCopy(inputText)}
+                                            disabled={!inputText} title="复制源文本">
+                                        📋 复制
+                                    </button>
+                                </div>
+                                <span className="char-counter">{inputText.length} / 5000</span>
+                            </div>
+                        </div>
+
+                        {/* Target Output Box */}
+                        <div className="editor-box">
+                            <div className="output-text" ref={outputRef}>
+                                {thinkText && (
+                                    <div className="think-card">
+                                        <div className="think-header">
+                                            <span>🧠 深度思考中...</span>
+                                            {isLoading && !outputText && <span className="cursor think-cursor"></span>}
+                                        </div>
+                                        <div className="think-body">{thinkText}</div>
+                                    </div>
+                                )}
+                                {isLoading && !thinkText && !outputText ? (
+                                    <div className="loading-shimmer">
+                                        <span>⚡ 智能AI翻译中...</span>
+                                    </div>
+                                ) : outputText ? (
+                                    <div className="answer-card">
+                                        <div className="answer-header">
+                                            <span>💡 翻译结果：</span>
+                                        </div>
+                                        <div className="answer-body">
+                                            {outputText}
+                                            {isLoading && <span className="cursor"></span>}
+                                        </div>
+                                    </div>
+                                ) : !thinkText ? (
+                                    <span className="placeholder-text">翻译结果将在此处显示...</span>
+                                ) : null}
+                            </div>
+                            <div className="editor-footer">
+                                <div className="tool-group">
+                                    <button className="tool-btn" onClick={handleClearOutput}
+                                            disabled={!outputText && !thinkText} title="清空翻译结果">
+                                        ✕ 清空
+                                    </button>
+                                    <button className="tool-btn" onClick={() => speakText(outputText, targetLang)}
+                                            disabled={!outputText} title="朗读翻译结果">
+                                        🔊 朗读
+                                    </button>
+                                    <button className="tool-btn" onClick={() => handleCopy(outputText)}
+                                            disabled={!outputText} title="复制翻译结果">
+                                        📋 复制
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Quick Presets */}
+                    <div>
+                        <span style={{
+                            fontSize: '0.85rem',
+                            color: 'var(--text-muted)',
+                            fontWeight: 500
+                        }}>快捷常用短语示例:</span>
+                        <div className="quick-presets">
+                            {SAMPLES.map((sample, idx) => (
+                                <button
+                                    key={idx}
+                                    className="preset-chip"
+                                    onClick={() => setInputText(sample.text)}
+                                >
+                                    {sample.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Action Row */}
+                    <div className="action-row">
+                        <label className="auto-translate-toggle">
+                            <input
+                                type="checkbox"
+                                checked={autoTranslate}
+                                onChange={handleAutoTranslateToggle}
+                            />
+                            <span>实时自动翻译 (无需手动点击)</span>
+                        </label>
+
+                        <button
+                            className={`translate-main-btn ${isLoading ? 'danger' : ''}`}
+                            onClick={isLoading ? handleStop : handleTranslate}
+                            disabled={!isLoading && !inputText.trim()}
+                        >
+                            {isLoading ? '停止接收' : '立即翻译'}
+                        </button>
+                    </div>
+                </main>
+
+                {/* History Section */}
+                {history.length > 0 && (
+                    <section className="history-section glass-panel">
+                        <div className="section-header">
+                            <h3 className="section-title">
+                                📜 翻译历史
+                            </h3>
+                            <button className="tool-btn" onClick={handleClearHistory}>
+                                🗑️ 清空历史
+                            </button>
+                        </div>
+                        <div className="history-list">
+                            {history.map(item => (
+                                <div
+                                    key={item.id}
+                                    className="history-item"
+                                    onClick={() => {
+                                        setInputText(item.sourceText);
+                                        setOutputText(item.targetText);
+                                    }}
+                                    style={{cursor: 'pointer'}}
+                                >
+                                    <div className="history-texts">
+                                        <div className="history-source">{item.sourceText}</div>
+                                        <div className="history-target">{item.targetText}</div>
+                                    </div>
+                                    <div className="history-meta">
+                                        <span>{item.from} ➔ {item.to}</span>
+                                        <span>{item.time}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+                )}
+
+                {/* Toast Notification */}
+                {toastMessage && (
+                    <div className="toast">
+                        {toastMessage}
+                    </div>
+                )}
+            </div>
+        );
+    }
+
+    const rootElement = document.getElementById('root');
+    if (ReactDOM.createRoot) {
+        ReactDOM.createRoot(rootElement).render(<App/>);
+    } else {
+        ReactDOM.render(<App/>, rootElement);
+    }
+</script>
+</body>
+</html>

@@ -3,7 +3,7 @@ module github.com/ai-knowledge-lab/translate
 go 1.26.5
 
 require (
-	github.com/ai-knowledge-lab/utils v0.0.0-20260730074747-80a7df2f495b
+	github.com/ai-knowledge-lab/utils v0.0.0-20260731051613-82305fd755bf
 	github.com/gin-contrib/cors v1.7.7
 	github.com/gin-gonic/gin v1.12.0
 	github.com/go-resty/resty/v2 v2.17.2
