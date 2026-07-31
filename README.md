@@ -53,7 +53,7 @@ ollama ls
 
 ```bash
 go mod download
-go run .
+go run main.go
 ```
 
 翻译服务启动后监听：
