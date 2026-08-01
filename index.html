@@ -699,7 +699,7 @@
 
         const savedAutoTranslate = sessionStorage.getItem('omni_auto_translate');
         const [autoTranslate, setAutoTranslate] = useState(
-            savedAutoTranslate !== null ? JSON.parse(savedAutoTranslate) : true
+            savedAutoTranslate !== null ? JSON.parse(savedAutoTranslate) : false
         );
 
         const [history, setHistory] = useState([]);
